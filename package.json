@@ -1,0 +1,23 @@
+{
+  "name": "vdf-extra",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "lodash.merge": "^4.6.0"
+  },
+  "readmeFilename": "README.md",
+  "description": "A fork of node-vdf, with '#base' support, error handling and more options",
+  "main": "index.js",
+  "keywords": [
+    "steam",
+    "valve",
+    "vdf"
+  ],
+  "author": "ark120202",
+  "license": "ISC",
+  "devDependencies": {
+    "tape": "^4.6.3"
+  }
+}
