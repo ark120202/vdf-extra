@@ -136,7 +136,7 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 			/* eslint no-fallthrough: 0 */
 			default: {
 				if (c !== SPACE && c !== TAB) {
-					if (c !== STRING && !parseUnquotedStrings) throw new Error('Found unquoted string at ' + i);
+					if (c !== STRING && !parseUnquotedStrings) throw new Error(`Found unquoted string at ${i} (${c})`);
 					let _string = (c === STRING ? _symtostr : _unquotedtostr)(stream, i);
 					let string = _string[0].replace(/\\\\/g, '\\').replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
 					i = _string[1];
