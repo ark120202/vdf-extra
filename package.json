@@ -17,6 +17,10 @@
     "valve",
     "vdf"
   ],
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
   "author": "ark120202",
   "license": "ISC",
   "devDependencies": {
