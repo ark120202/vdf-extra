@@ -2,7 +2,7 @@ const tape = require('tape');
 const vdf = require('../');
 
 tape('Normal parsing cases', t => {
-	t.plan(3);
+	t.plan(4);
 	t.deepEqual(vdf.parse(`"Root"
 		{
 			"key1"	"value"
@@ -21,6 +21,12 @@ tape('Normal parsing cases', t => {
 		vdf.parse('"Root"{"key1""value""key2"{"k""v"}}'),
 		{key1: 'value', key2: {k: 'v'}},
 		'parsing deep levels of key values'
+	);
+
+	t.deepEqual(
+		vdf.parse('"Root"{"key1""val\\"ue\\""}'),
+		{key1: 'val"ue"'},
+		'parsing escaped quotes'
 	);
 });
 
