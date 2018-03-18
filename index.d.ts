@@ -1,0 +1,35 @@
+export interface ParseOptions {
+  getBaseFile(path: string): string | Promise<string>;
+  mergeRoots?: boolean;
+  handleMultipleKeys?: boolean;
+  parseUnquotedStrings?: boolean;
+}
+
+/**
+ * Parses Key Values string into JS object
+ *
+ * @param string Input string
+ * @param options Parsing options
+ * @param options.getBaseFile Function that will be called to each #base element
+ * @param options.mergeRoots If false, returns object with KV file root element
+ * @param options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
+ * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
+ * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
+ */
+export function parse(string: string, options?: ParseOptions): Promise<object> | object;
+
+/**
+ * Converts JS object into Key Values file
+ *
+ * @param obj Converted object
+ * @param indentLength Specifies indent Length. If equals 0 string won't have tabs/newlines at all. Must be dividable by tabWidth.
+ * @param indent String that will be used as indent. Defaults to tabs
+ * @param tabSize Default tab size. Will be used only if indent is tab
+ * @returns Stringified Key Values file
+ */
+export function stringify(
+  obj: { [key: string]: any },
+  indentLength?: number,
+  indent?: string,
+  tabSize?: number,
+): string;
