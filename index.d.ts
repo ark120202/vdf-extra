@@ -16,7 +16,7 @@ export interface ParseOptions {
  * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
  * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
  */
-export function parse(string: string, options?: ParseOptions): Promise<object> | object;
+export function parse<T extends object>(string: string, options?: ParseOptions): Promise<T> | T;
 
 /**
  * Converts JS object into Key Values file
