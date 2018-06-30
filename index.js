@@ -9,9 +9,8 @@ Modified by ark120202
 */
 
 /* eslint global-require: 0 */
-const _ = {
-	merge: require('lodash.merge')
-};
+const _ = { merge: require('lodash.merge') };
+const isNumber = require('is-number');
 
 const STRING = '"',
 	NODE_OPEN = '{',
@@ -25,6 +24,10 @@ const STRING = '"',
 	TAB = '\t',
 	WHITESPACE = [SPACE, '\t', '\r', '\n'],
 	BASE = '#base ';
+
+function _parseNumber(string) {
+	return isNumber(string) ? Number(string) : string;
+}
 
 function _symtostr(line, i, token) {
 	token = token || STRING;
@@ -60,7 +63,7 @@ function throwBsaeParseError() {
 	throw new Error('#base is allowed only in kv root');
 }
 
-function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseUnquotedStrings, isChild) {
+function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseUnquotedStrings, parseNumbers, isChild) {
 	ptr = ptr || 0;
 
 	let laststr,
@@ -74,12 +77,12 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 	while (i < stream.length) {
 		let c = stream.substring(i, i + 1);
 
-		switch(c) {
+		switch (c) {
 			case NODE_OPEN: {
 				next_is_value = false;  // Make sure the next string is interpreted as a key.
 
-				let parsed = _parse(stream, i + 1, throwBsaeParseError, false, handleMultipleKeys, parseUnquotedStrings, true);
-				deserialized[laststr] = parsed[0];
+				let parsed = _parse(stream, i + 1, throwBsaeParseError, false, handleMultipleKeys, parseUnquotedStrings, parseNumbers, true);
+				deserialized[laststr] = parseNumbers ? _parseNumber(parsed[0]) : parsed[0];
 				i = parsed[1];
 				break;
 			}
@@ -122,7 +125,7 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 							bases.push(
 								Promise.resolve(getBaseFile(thisPath))
 									.then(x => {
-										if (x) return _parse(x, null, getBaseFile, true, handleMultipleKeys, parseUnquotedStrings);
+										if (x) return _parse(x, null, getBaseFile, true, handleMultipleKeys, parseUnquotedStrings, parseNumbers);
 									})
 							);
 						} else {
@@ -146,9 +149,9 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 							lastbrk = null;  // Ignore this sentry if it's the second bracketed expression
 						} else if (handleMultipleKeys && laststr in deserialized) {
 							if (!Array.isArray(deserialized[laststr])) deserialized[laststr] = [deserialized[laststr]];
-							deserialized[laststr].push(string);
+							deserialized[laststr].push(parseNumbers ? _parseNumber(string) : string);
 						} else {
-							deserialized[laststr] = string;
+							deserialized[laststr] = parseNumbers ? _parseNumber(string) : string;
 						}
 					}
 					c = STRING;  // Force c == string so lasttok will be set properly.
@@ -190,7 +193,7 @@ function _dump(obj, indent, indentLength, pretty, tabSize, level) {
 		}
 	}
 
-	for(let key in obj) {
+	for (let key in obj) {
 		let value = obj[key];
 		const firstLinePart = preLineIndent + '"' + key + '"';
 		if (typeof value === 'object') {
@@ -239,11 +242,11 @@ module.exports = {
 	 * @param {boolean} options.mergeRoots If false, returns object with KV file root element
 	 * @param {boolean} options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
 	 * @param {boolean} options.parseUnquotedStrings If true, parser wil handle unquoted tokens
+	 * @param {boolean} options.parseNumbers If not false, number-like strings would be parsed as numbers
 	 * @return {Promise<object>|object} Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
 	 */
-	parse(string, options) {
-		options = options || {};
-		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.handleMultipleKeys, options.parseUnquotedStrings === true);
+	parse(string, options = {}) {
+		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.handleMultipleKeys, options.parseUnquotedStrings === true, options.parseNumbers !== false);
 		if (_parsed instanceof Promise) {
 			return _parsed.then(_parsedList => {
 				return _parsedList[0];
