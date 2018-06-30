@@ -247,13 +247,23 @@ module.exports = {
 	 */
 	parse(string, options = {}) {
 		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.handleMultipleKeys, options.parseUnquotedStrings === true, options.parseNumbers !== false);
-		if (_parsed instanceof Promise) {
-			return _parsed.then(_parsedList => {
-				return _parsedList[0];
-			});
-		} else {
-			return _parsed[0];
-		}
+		return Promise.resolve(_parsed).then(v => v[0]);
+	},
+
+	/**
+	 * Parses Key Values string into JS object
+	 *
+	 * @param {string} string Input string
+	 * @param {object} options Parsing options
+	 * @param {boolean} options.mergeRoots If false, returns object with KV file root element
+	 * @param {boolean} options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
+	 * @param {boolean} options.parseUnquotedStrings If true, parser wil handle unquoted tokens
+	 * @param {boolean} options.parseNumbers If not false, number-like strings would be parsed as numbers
+	 * @return {Promise<object>|object} Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
+	 */
+	parseSync(string, options = {}) {
+		let _parsed = _parse(string, null, null, options.mergeRoots !== false, options.handleMultipleKeys, options.parseUnquotedStrings === true, options.parseNumbers !== false);
+		return _parsed[0];
 	},
 
 	/**
