@@ -9,7 +9,7 @@
   ],
   "repository": "https://github.com/ark120202/vdf-extra.git",
   "author": "ark120202",
-  "license": "ISC",
+  "license": "MIT",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
