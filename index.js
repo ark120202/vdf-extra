@@ -12,6 +12,9 @@ Modified by ark120202
 const _ = { merge: require('lodash.merge'), flatMap: require('lodash.flatmap') };
 const isNumber = require('is-number');
 
+const EXTRA_VALUES = Symbol('extra values')
+module.exports.EXTRA_VALUES = EXTRA_VALUES;
+
 const STRING = '"',
 	NODE_OPEN = '{',
 	NODE_CLOSE = '}',
@@ -62,8 +65,6 @@ function _unquotedtostr(line, i) {
 function throwBsaeParseError() {
 	throw new Error('#base is allowed only in kv root');
 }
-
-const EXTRA_VALUES = Symbol('extra values')
 
 function _parse(stream, ptr, getBaseFile, mergeRoots, parseUnquotedStrings, parseNumbers, isChild) {
 	ptr = ptr || 0;
@@ -123,16 +124,12 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, parseUnquotedStrings, pars
 						if (thisPath.startsWith('"') && thisPath.endsWith('"')) {
 							thisPath = thisPath.slice(1, -1);
 						}
-						if (getBaseFile) {
-							bases.push(
-								Promise.resolve(getBaseFile(thisPath))
-									.then(x => {
-										if (x) return _parse(x, null, getBaseFile, true, parseUnquotedStrings, parseNumbers);
-									})
-							);
-						} else {
-							throw new Error('getBaseFile is undefined, but kv contains #base');
-						}
+						bases.push(
+							Promise.resolve(getBaseFile(thisPath))
+								.then(x => {
+									if (x) return _parse(x, null, getBaseFile, true, parseUnquotedStrings, parseNumbers);
+								})
+						);
 						i = stream.indexOf('\n', i);
 						break;
 					}
@@ -235,25 +232,39 @@ function _dump(obj, options, level) {
 	}).join(newline);
 }
 
-module.exports = {
-	EXTRA_VALUES,
-	parse(string, options = {}) {
-		let _parsed = _parse(string, null, null, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
-		return _parsed[0];
+const parseDefaults = {
+	getBaseFile() {
+		throw new Error('getBaseFile is undefined, but kv contains #base');
 	},
-	parseAsync(string, options = {}) {
-		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
-		return Promise.resolve(_parsed).then(v => v[0]);
-	},
-	stringify(obj, options = {}) {
-		const align = options.align != null ? options.align : -1;
-		const space = options.space != null ? options.space : '\t';
-		const tabSize = options.tabSize != null ? options.tabSize : 4;
-
-		if (align > 0 && space === '\t' && align % tabSize !== 0) {
-			throw new Error('options.align must be dividable by options.tabSize');
-		}
-
-		return _dump(obj, { space, align, tabSize }, 0);
-	}
+	mergeRoots: true,
+	parseUnquotedStrings: false,
+	parseNumbers: true,
 };
+
+module.exports.parse = function parse(string, options = {}) {
+	options = { ...parseDefaults, ...options };
+	let _parsed = _parse(string, null, null, options.mergeRoots, options.parseUnquotedStrings, options.parseNumbers);
+	return _parsed[0];
+};
+
+module.exports.parseAsync = function parseAsync(string, options = {}) {
+	options = { ...parseDefaults, ...options };
+	let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots, options.parseUnquotedStrings, options.parseNumbers);
+	return Promise.resolve(_parsed).then(v => v[0]);
+};
+
+const stringifyDefaults = {
+	align: -1,
+	space: '\t',
+	tabSize: 4,
+};
+
+module.exports.stringify = function stringify(obj, options = {}) {
+	options = { ...stringifyDefaults, ...options };
+
+	if (options.align > 0 && options.space === '\t' && options.align % options.tabSize !== 0) {
+		throw new Error('options.align must be dividable by options.tabSize');
+	}
+
+	return _dump(obj, options, 0);
+}
