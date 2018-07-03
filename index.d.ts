@@ -13,25 +13,25 @@ export interface AsyncParseOptions extends ParseOptions {
  *
  * @param string Input string
  * @param options Parsing options
+ * @param options.mergeRoots If false, returns object with KV file root element
+ * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
+ * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
+ * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
+ */
+export function parse<T extends object>(string: string, options?: ParseOptions): T;
+
+/**
+ * Parses Key Values string into JS object
+ *
+ * @param string Input string
+ * @param options Parsing options
  * @param options.getBaseFile Function that will be called to each #base element
  * @param options.mergeRoots If false, returns object with KV file root element
  * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
  * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
  * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
  */
-export function parse<T extends object>(string: string, options?: AsyncParseOptions): Promise<T>;
-/**
- * Parses Key Values string into JS object
- *
- * @param string Input string
- * @param options Parsing options
- * @param options.mergeRoots If false, returns object with KV file root element
- * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
- * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
- * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
- */
-export function parseSync<T extends object>(string: string, options?: ParseOptions): T;
-
+export function parseAsync<T extends object>(string: string, options?: AsyncParseOptions): Promise<T>;
 
 export interface StringifyOptions {
   align?: number;

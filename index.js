@@ -238,12 +238,12 @@ function _dump(obj, options, level) {
 module.exports = {
 	EXTRA_VALUES,
 	parse(string, options = {}) {
-		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
-		return Promise.resolve(_parsed).then(v => v[0]);
-	},
-	parseSync(string, options = {}) {
 		let _parsed = _parse(string, null, null, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
 		return _parsed[0];
+	},
+	parseAsync(string, options = {}) {
+		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
+		return Promise.resolve(_parsed).then(v => v[0]);
 	},
 	stringify(obj, options = {}) {
 		const align = options.align != null ? options.align : -1;

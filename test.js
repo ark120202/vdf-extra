@@ -1,8 +1,8 @@
 import test from 'ava';
 import dedent from 'dedent';
-import { EXTRA_VALUES, parse, parseSync, stringify } from '.';
+import { EXTRA_VALUES, parseAsync, parse, stringify } from '.';
 
-const parses = (t, input, expected, options) => t.deepEqual(parseSync(input, options), expected);
+const parses = (t, input, expected, options) => t.deepEqual(parse(input, options), expected);
 
 test(
   'parses simple pair',
@@ -77,7 +77,7 @@ test(
 
 test('parses asynchronously', async t => {
   t.deepEqual(
-    await parse(
+    await parseAsync(
       `
         #base "buffer"
         "" { "k"  "v" }
@@ -88,7 +88,7 @@ test('parses asynchronously', async t => {
   );
 });
 
-const notParses = (t, input) => t.throws(() => parseSync(input));
+const notParses = (t, input) => t.throws(() => parse(input));
 test('not parses with extra }', notParses, '""{"k" "v"}}');
 test('not parses with extra {', notParses, '""{{"k" "v"}');
 test('not parses with unpaired key', notParses, '""{"k"}');
