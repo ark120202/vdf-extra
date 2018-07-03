@@ -85,8 +85,8 @@ test('not parses with extra {', notParses, '""{{"k" "v"}');
 test('not parses with unpaired key', notParses, '""{"k"}');
 test('not parses with unclosed quote', notParses, '""{"k "v" }');
 
-const stringifies = (t, input, expected, ...options) =>
-  t.is(stringify(input, ...options).trim(), expected.trim());
+const stringifies = (t, input, expected, options) =>
+  t.is(stringify(input, options).trim(), expected.trim());
 
 test(
   'stringifies object',
@@ -111,7 +111,13 @@ test(
     }
   `.replace(/  /g, '\t'),
 );
-test('stringifies minified', stringifies, { root: { _: 'value' } }, '"root" { "_" "value" } ', 0);
+test(
+  'stringifies minified',
+  stringifies,
+  { root: { _: 'value' } },
+  '"root" { "_" "value" } ',
+  { align: 0 },
+);
 test(
   'stringifes with custom indent',
   stringifies,
@@ -122,6 +128,5 @@ test(
       "_"    "value"
     }
   `,
-  -1,
-  '  ',
+  { space: '  ' },
 );

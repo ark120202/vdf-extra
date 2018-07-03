@@ -35,18 +35,24 @@ export function parse<T extends object>(string: string, options?: AsyncParseOpti
  */
 export function parseSync<T extends object>(string: string, options?: ParseOptions): T;
 
+
+export interface StringifyOptions {
+  align?: number;
+  space?: string | number;
+  tabSize?: number;
+}
+
 /**
  * Converts JS object into Key Values file
  *
- * @param obj Converted object
- * @param indentLength Specifies indent Length. If equals 0 string won't have tabs/newlines at all. Must be dividable by tabWidth.
- * @param indent String that will be used as indent. Defaults to tabs
- * @param tabSize Default tab size. Will be used only if indent is tab
- * @returns Stringified Key Values file
+ * @param {object} obj Converted object
+ * @param {?object} options Options
+ * @param {?number} options.align Length of alignment. Must be dividable by tabSize if used. Defaults to -1, which means 2 spaces
+ * @param {?string} options.space String that will be used as indent. Defaults to '\t'.
+ * @param {?number} options.tabSize Default tab size. Will be used only if indent is tab. Defaults to 4.
+ * @returns {string} Stringified Key Values file
  */
 export function stringify(
-  obj: { [key: string]: any },
-  indentLength?: number,
-  indent?: string,
-  tabSize?: number,
+  obj: object,
+  options?: StringifyOptions,
 ): string;

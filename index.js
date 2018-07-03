@@ -182,14 +182,16 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 	}
 }
 
-function _dump(obj, indent, indentLength, pretty, tabSize, level) {
+function _dump(obj, options, level) {
 	let buf = '';
+	const { space, align, tabSize } = options;
+	const pretty = align !== 0;
 	const newline = pretty ? '\n' : ' ';
 
 	let preLineIndent = '';
 	if (pretty) {
 		for (let i = 0; i < level; i++) {
-			preLineIndent += indent;
+			preLineIndent += space;
 		}
 	}
 
@@ -200,16 +202,16 @@ function _dump(obj, indent, indentLength, pretty, tabSize, level) {
 			const dumpedValue = _dump(value instanceof Array ? value.reduce((acc, item) => {
 				acc[item] = 1;
 				return acc;
-			}, {}) : value, indent, indentLength, pretty, tabSize, level + 1);
+			}, {}) : value, options, level + 1);
 			buf += [firstLinePart, newline, preLineIndent, '{', newline, dumpedValue, preLineIndent, '}', newline].join('');
 		} else {
 			let keyValueIndent = '';
 			if (pretty) {
-				if (indentLength === -1) {
-					keyValueIndent += indent + indent;
+				if (align === -1) {
+					keyValueIndent += space + space;
 				} else {
-					while ((firstLinePart + keyValueIndent).replace(/\t/g, ' '.repeat(tabSize)).length < indentLength) {
-						keyValueIndent += indent;
+					while ((firstLinePart + keyValueIndent).replace(/\t/g, ' '.repeat(tabSize)).length < align) {
+						keyValueIndent += space;
 					}
 				}
 			} else {
@@ -270,18 +272,21 @@ module.exports = {
 	 * Converts JS object into Key Values file
 	 *
 	 * @param {object} obj Converted object
-	 * @param {?number} indentLength Specifies indent Length. If equals 0 string won't have tabs/newlines at all. Must be dividable by tabWidth.
-	 * @param {?string} indent String that will be used as indent. Defaults to tabs
-	 * @param {?number} tabSize Default tab size. Will be used only if indent is tab
+	 * @param {?object} options Options
+	 * @param {?number} options.align Length of alignment. Must be dividable by tabSize if used. Defaults to -1, which means 2 spaces
+	 * @param {?string} options.space String that will be used as indent. Defaults to '\t'.
+	 * @param {?number} options.tabSize Default tab size. Will be used only if indent is tab. Defaults to 4.
 	 * @returns {string} Stringified Key Values file
 	 */
-	stringify(obj, indentLength, indent, tabSize) {
-		if (typeof obj !== 'object') throw new TypeError('VDF.stringify: a key has value of type other than string or object');
+	stringify(obj, options = {}) {
+		const align = options.align != null ? options.align : -1;
+		const space = options.space != null ? options.space : '\t';
+		const tabSize = options.tabSize != null ? options.tabSize : 4;
 
-		if (indentLength == null) indentLength = -1;
-		if (tabSize == null) tabSize = 4;
-		if (indentLength > 0 && indent === '\t' && indentLength % tabSize !== 0) throw new Error('Indent length must be dividable by tab width');
-		indent = indent != null ? indent : '\t'; // Valve uses tabs in their files
-		return _dump(obj, indent, indentLength, indentLength !== 0, tabSize, 0);
+		if (align > 0 && space === '\t' && align % tabSize !== 0) {
+			throw new Error('options.align must be dividable by options.tabSize');
+		}
+
+		return _dump(obj, { space, align, tabSize }, 0);
 	}
 };
