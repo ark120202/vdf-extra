@@ -237,54 +237,14 @@ function _dump(obj, options, level) {
 
 module.exports = {
 	EXTRA_VALUES,
-	/**
-	 * @callback getBaseFile
-	 *
-	 * @param {string} filePath #base file path
-	 * @return {Promise} File contents
-	 */
-
-	/**
-	 * Parses Key Values string into JS object
-	 *
-	 * @param {string} string Input string
-	 * @param {object} options Parsing options
-	 * @param {getBaseFile} options.getBaseFile Function that will be called to each #base element
-	 * @param {boolean} options.mergeRoots If false, returns object with KV file root element
-	 * @param {boolean} options.parseUnquotedStrings If true, parser wil handle unquoted tokens
-	 * @param {boolean} options.parseNumbers If not false, number-like strings would be parsed as numbers
-	 * @return {Promise<object>|object} Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
-	 */
 	parse(string, options = {}) {
 		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
 		return Promise.resolve(_parsed).then(v => v[0]);
 	},
-
-	/**
-	 * Parses Key Values string into JS object
-	 *
-	 * @param {string} string Input string
-	 * @param {object} options Parsing options
-	 * @param {boolean} options.mergeRoots If false, returns object with KV file root element
-	 * @param {boolean} options.parseUnquotedStrings If true, parser wil handle unquoted tokens
-	 * @param {boolean} options.parseNumbers If not false, number-like strings would be parsed as numbers
-	 * @return {Promise<object>|object} Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
-	 */
 	parseSync(string, options = {}) {
 		let _parsed = _parse(string, null, null, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
 		return _parsed[0];
 	},
-
-	/**
-	 * Converts JS object into Key Values file
-	 *
-	 * @param {object} obj Converted object
-	 * @param {?object} options Options
-	 * @param {?number} options.align Length of alignment. Must be dividable by tabSize if used. Defaults to -1, which means 2 spaces
-	 * @param {?string} options.space String that will be used as indent. Defaults to '\t'.
-	 * @param {?number} options.tabSize Default tab size. Will be used only if indent is tab. Defaults to 4.
-	 * @returns {string} Stringified Key Values file
-	 */
 	stringify(obj, options = {}) {
 		const align = options.align != null ? options.align : -1;
 		const space = options.space != null ? options.space : '\t';
