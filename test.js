@@ -1,6 +1,6 @@
 import test from 'ava';
 import dedent from 'dedent';
-import { parse, parseSync, stringify } from '.';
+import { EXTRA_VALUES, parse, parseSync, stringify } from '.';
 
 const parses = (t, input, expected, options) => t.deepEqual(parseSync(input, options), expected);
 
@@ -30,6 +30,22 @@ test(
   `,
   { _: { _: 'value' } },
 );
+test(
+  'parses multiple values with the same key',
+  parses,
+  `
+    ""
+    {
+      "_" "one"
+      "_" "two"
+      "_" "three"
+    }
+  `,
+  {
+    _: 'three',
+    [EXTRA_VALUES]: { _: ['one', 'two'] }
+  },
+);
 test('parses escaped quotes', parses, '""{"_""val\\"ue\\""}', { _: 'val"ue"' });
 
 test('parses integer numbers', parses, '""{"_" "10"}', { _: 10 });
@@ -50,13 +66,6 @@ test(
   '"" { "k" v }',
   { k: 'v' },
   { parseUnquotedStrings: true },
-);
-test(
-  'parses with options.handleMultipleKeys',
-  parses,
-  '"" { "k" "v1"  "k" "v2" }',
-  { k: ['v1', 'v2'] },
-  { handleMultipleKeys: true },
 );
 test(
   'parses with options.parseNumbers',
@@ -106,16 +115,29 @@ test(
   dedent`
     "root"
     {
-      "v1"    "1"
-      "v2"    "1"
+      "1"    "v1"
+      "2"    "v2"
     }
+  `.replace(/  /g, '\t'),
+);
+test(
+  'stringifies extra values',
+  stringifies,
+  { _: 3, [EXTRA_VALUES]: { _: [1, {}] } },
+  dedent`
+    "_"    "1"
+    "_"
+    {
+
+    }
+    "_"    "3"
   `.replace(/  /g, '\t'),
 );
 test(
   'stringifies minified',
   stringifies,
   { root: { _: 'value' } },
-  '"root" { "_" "value" } ',
+  '"root" { "_" "value" }',
   { align: 0 },
 );
 test(

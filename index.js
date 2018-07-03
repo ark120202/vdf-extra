@@ -9,7 +9,7 @@ Modified by ark120202
 */
 
 /* eslint global-require: 0 */
-const _ = { merge: require('lodash.merge') };
+const _ = { merge: require('lodash.merge'), flatMap: require('lodash.flatmap') };
 const isNumber = require('is-number');
 
 const STRING = '"',
@@ -63,7 +63,9 @@ function throwBsaeParseError() {
 	throw new Error('#base is allowed only in kv root');
 }
 
-function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseUnquotedStrings, parseNumbers, isChild) {
+const EXTRA_VALUES = Symbol('extra values')
+
+function _parse(stream, ptr, getBaseFile, mergeRoots, parseUnquotedStrings, parseNumbers, isChild) {
 	ptr = ptr || 0;
 
 	let laststr,
@@ -81,7 +83,7 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 			case NODE_OPEN: {
 				next_is_value = false;  // Make sure the next string is interpreted as a key.
 
-				let parsed = _parse(stream, i + 1, throwBsaeParseError, false, handleMultipleKeys, parseUnquotedStrings, parseNumbers, true);
+				let parsed = _parse(stream, i + 1, throwBsaeParseError, false, parseUnquotedStrings, parseNumbers, true);
 				deserialized[laststr] = parseNumbers ? _parseNumber(parsed[0]) : parsed[0];
 				i = parsed[1];
 				break;
@@ -125,7 +127,7 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 							bases.push(
 								Promise.resolve(getBaseFile(thisPath))
 									.then(x => {
-										if (x) return _parse(x, null, getBaseFile, true, handleMultipleKeys, parseUnquotedStrings, parseNumbers);
+										if (x) return _parse(x, null, getBaseFile, true, parseUnquotedStrings, parseNumbers);
 									})
 							);
 						} else {
@@ -147,10 +149,12 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 					if (lasttok === STRING && next_is_value) {
 						if (deserialized[laststr] && lastbrk != null) {
 							lastbrk = null;  // Ignore this sentry if it's the second bracketed expression
-						} else if (handleMultipleKeys && laststr in deserialized) {
-							if (!Array.isArray(deserialized[laststr])) deserialized[laststr] = [deserialized[laststr]];
-							deserialized[laststr].push(parseNumbers ? _parseNumber(string) : string);
 						} else {
+							if (deserialized[laststr] != null) {
+								if (!deserialized[EXTRA_VALUES]) deserialized[EXTRA_VALUES] = {};
+								if (!deserialized[EXTRA_VALUES][laststr]) deserialized[EXTRA_VALUES][laststr] = [];
+								deserialized[EXTRA_VALUES][laststr].push(deserialized[laststr]);
+							}
 							deserialized[laststr] = parseNumbers ? _parseNumber(string) : string;
 						}
 					}
@@ -183,51 +187,56 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, handleMultipleKeys, parseU
 }
 
 function _dump(obj, options, level) {
-	let buf = '';
 	const { space, align, tabSize } = options;
 	const pretty = align !== 0;
 	const newline = pretty ? '\n' : ' ';
 
-	let preLineIndent = '';
-	if (pretty) {
-		for (let i = 0; i < level; i++) {
-			preLineIndent += space;
-		}
+	const preLineIndent = pretty ? space.repeat(level) : '';
+
+	let pairs = Array.isArray(obj) ? obj.map((value, index) => [index + 1, value]) : Object.entries(obj);
+	if (!Array.isArray(obj) && obj[EXTRA_VALUES]) {
+		pairs = _.flatMap(pairs, ([key, value]) => [
+			...(obj[EXTRA_VALUES][key] || []).map(v => [key, v]),
+			[key, value],
+		]);
 	}
 
-	for (let key in obj) {
-		let value = obj[key];
+	return _.flatMap(pairs, ([key, value]) => {
 		const firstLinePart = preLineIndent + '"' + key + '"';
 		if (typeof value === 'object') {
-			const dumpedValue = _dump(value instanceof Array ? value.reduce((acc, item) => {
-				acc[item] = 1;
-				return acc;
-			}, {}) : value, options, level + 1);
-			buf += [firstLinePart, newline, preLineIndent, '{', newline, dumpedValue, preLineIndent, '}', newline].join('');
-		} else {
-			let keyValueIndent = '';
-			if (pretty) {
-				if (align === -1) {
-					keyValueIndent += space + space;
-				} else {
-					while ((firstLinePart + keyValueIndent).replace(/\t/g, ' '.repeat(tabSize)).length < align) {
-						keyValueIndent += space;
-					}
-				}
-			} else {
-				keyValueIndent = ' ';
-			}
-			if (keyValueIndent.length === 0) keyValueIndent = '';
-			value = String(value);
-			value = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\t/g, '\\t');
-			buf += [firstLinePart, keyValueIndent, '"', value, '"', newline].join('');
+			const dumpedValue = _dump(value, options, level + 1);
+			return [
+				firstLinePart,
+				preLineIndent + '{',
+				dumpedValue,
+				preLineIndent + '}',
+			];
 		}
-	}
 
-	return buf;
+		let keyValueIndent = '';
+		if (pretty) {
+			if (align === -1) {
+				keyValueIndent += space.repeat(2);
+			} else {
+				while ((firstLinePart + keyValueIndent).replace(/\t/g, ' '.repeat(tabSize)).length < align) {
+					keyValueIndent += space;
+				}
+			}
+		} else {
+			keyValueIndent = ' ';
+		}
+
+		value = String(value)
+			.replace(/\\/g, '\\\\')
+			.replace(/"/g, '\\"')
+			.replace(/\n/g, '\\n')
+			.replace(/\t/g, '\\t');
+		return firstLinePart + keyValueIndent + '"' + value + '"';
+	}).join(newline);
 }
 
 module.exports = {
+	EXTRA_VALUES,
 	/**
 	 * @callback getBaseFile
 	 *
@@ -242,13 +251,12 @@ module.exports = {
 	 * @param {object} options Parsing options
 	 * @param {getBaseFile} options.getBaseFile Function that will be called to each #base element
 	 * @param {boolean} options.mergeRoots If false, returns object with KV file root element
-	 * @param {boolean} options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
 	 * @param {boolean} options.parseUnquotedStrings If true, parser wil handle unquoted tokens
 	 * @param {boolean} options.parseNumbers If not false, number-like strings would be parsed as numbers
 	 * @return {Promise<object>|object} Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
 	 */
 	parse(string, options = {}) {
-		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.handleMultipleKeys, options.parseUnquotedStrings === true, options.parseNumbers !== false);
+		let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
 		return Promise.resolve(_parsed).then(v => v[0]);
 	},
 
@@ -258,13 +266,12 @@ module.exports = {
 	 * @param {string} string Input string
 	 * @param {object} options Parsing options
 	 * @param {boolean} options.mergeRoots If false, returns object with KV file root element
-	 * @param {boolean} options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
 	 * @param {boolean} options.parseUnquotedStrings If true, parser wil handle unquoted tokens
 	 * @param {boolean} options.parseNumbers If not false, number-like strings would be parsed as numbers
 	 * @return {Promise<object>|object} Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
 	 */
 	parseSync(string, options = {}) {
-		let _parsed = _parse(string, null, null, options.mergeRoots !== false, options.handleMultipleKeys, options.parseUnquotedStrings === true, options.parseNumbers !== false);
+		let _parsed = _parse(string, null, null, options.mergeRoots !== false, options.parseUnquotedStrings === true, options.parseNumbers !== false);
 		return _parsed[0];
 	},
 

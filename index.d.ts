@@ -1,6 +1,5 @@
 export interface ParseOptions {
   mergeRoots?: boolean;
-  handleMultipleKeys?: boolean;
   parseUnquotedStrings?: boolean;
   parseNumbers?: boolean;
 }
@@ -16,7 +15,6 @@ export interface AsyncParseOptions extends ParseOptions {
  * @param options Parsing options
  * @param options.getBaseFile Function that will be called to each #base element
  * @param options.mergeRoots If false, returns object with KV file root element
- * @param options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
  * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
  * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
  * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
@@ -28,7 +26,6 @@ export function parse<T extends object>(string: string, options?: AsyncParseOpti
  * @param string Input string
  * @param options Parsing options
  * @param options.mergeRoots If false, returns object with KV file root element
- * @param options.handleMultipleKeys If true, than if KV key occurs multiple times it's values will be to Array
  * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
  * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
  * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
