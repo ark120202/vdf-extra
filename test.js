@@ -147,7 +147,7 @@ test(
   stringifies,
   { root: { _: 'value' } },
   '"root" { "_" "value" }',
-  { align: 0 },
+  { space: 0 },
 );
 test(
   'stringifes with custom indent',
