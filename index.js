@@ -124,11 +124,11 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, parseUnquotedStrings, pars
 						if (thisPath.startsWith('"') && thisPath.endsWith('"')) {
 							thisPath = thisPath.slice(1, -1);
 						}
+						const result = getBaseFile(thisPath);
 						bases.push(
-							Promise.resolve(getBaseFile(thisPath))
-								.then(x => {
-									if (x) return _parse(x, null, getBaseFile, true, parseUnquotedStrings, parseNumbers);
-								})
+							result.then != null
+							? result.then(x => x != null ? _parse(x, null, getBaseFile, true, parseUnquotedStrings, parseNumbers) : null)
+							: (result != null ? _parse(result, null, getBaseFile, true, parseUnquotedStrings, parseNumbers) : null)
 						);
 						i = stream.indexOf('\n', i);
 						break;
@@ -170,17 +170,15 @@ function _parse(stream, ptr, getBaseFile, mergeRoots, parseUnquotedStrings, pars
 
 	if (next_is_value) throw new Error(`Unexpected end of file. Expected value for '${laststr}'`);
 	if (isChild) throw new Error('Unexpected end of file. Expected block closing at ' + i);
-	if (getBaseFile && getBaseFile !== throwBsaeParseError) {
-		return Promise.all(bases).then(basesParsed => {
-			let fk = Object.keys(deserialized)[0];
-			for (let i = 0; i < basesParsed.length; i++) {
-				if (basesParsed[i]) deserialized[fk] = _.merge(basesParsed[i][0], deserialized[fk]); //Main KV takes priority over bases
-			}
-			return [mergeRoots ? deserialized[fk] : deserialized, i];
-		});
-	} else {
-		return [mergeRoots ? deserialized[Object.keys(deserialized)[0]] : deserialized, i];
-	}
+
+	const joinBases = basesParsed => {
+		let fk = Object.keys(deserialized)[0];
+		for (let i = 0; i < basesParsed.length; i++) {
+			if (basesParsed[i]) deserialized[fk] = _.merge(basesParsed[i][0], deserialized[fk]); //Main KV takes priority over bases
+		}
+		return [mergeRoots ? deserialized[fk] : deserialized, i];
+	};
+	return bases.some(x => x.then != null) ? Promise.all(bases).then(joinBases) : joinBases(bases);
 }
 
 function _dump(obj, options, level) {
@@ -233,8 +231,8 @@ function _dump(obj, options, level) {
 }
 
 const parseDefaults = {
-	getBaseFile() {
-		throw new Error('getBaseFile is undefined, but kv contains #base');
+	getBaseFile(file) {
+		throw new Error(`Couldn't resolve #base to ${file}. Provide getBaseFile option.`);
 	},
 	mergeRoots: true,
 	parseUnquotedStrings: false,
@@ -243,7 +241,8 @@ const parseDefaults = {
 
 module.exports.parse = function parse(string, options = {}) {
 	options = { ...parseDefaults, ...options };
-	let _parsed = _parse(string, null, null, options.mergeRoots, options.parseUnquotedStrings, options.parseNumbers);
+	let _parsed = _parse(string, null, options.getBaseFile, options.mergeRoots, options.parseUnquotedStrings, options.parseNumbers);
+	if (_parsed.then != null) throw new Error('getBaseFile returned a promise');
 	return _parsed[0];
 };
 

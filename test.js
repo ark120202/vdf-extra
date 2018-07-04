@@ -74,15 +74,24 @@ test(
   { k: '1' },
   { parseNumbers: false },
 );
-
-test('parses asynchronously', async t => {
+test(
+  'parses with options.getBaseFile',
+  parses,
+  `
+    #base "buffer"
+    "" { "k"  "v" }
+  `,
+  { k: 'v', k2: 'v2' },
+  { getBaseFile: () => '"" { "k2"  "v2" }' },
+);
+test('parses with asynchronous options.getBaseFile', async t => {
   t.deepEqual(
     await parseAsync(
       `
         #base "buffer"
         "" { "k"  "v" }
       `,
-      { getBaseFile: () => '"root2" { "k2"  "v2" }' },
+      { getBaseFile: () => Promise.resolve('"" { "k2"  "v2" }') },
     ),
     { k: 'v', k2: 'v2' },
   );

@@ -2,6 +2,7 @@ export interface ParseOptions {
   mergeRoots?: boolean;
   parseUnquotedStrings?: boolean;
   parseNumbers?: boolean;
+  getBaseFile(path: string): string;
 }
 
 export interface AsyncParseOptions extends ParseOptions {
