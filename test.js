@@ -1,6 +1,6 @@
 import test from 'ava';
 import dedent from 'dedent';
-import { EXTRA_VALUES, parseAsync, parse, stringify } from '.';
+import { EXTRA_VALUES, parseAsync, parse, stringify } from './lib';
 
 const parses = (t, input, expected, options) => t.deepEqual(parse(input, options), expected);
 

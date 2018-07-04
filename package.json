@@ -10,8 +10,8 @@
   "repository": "https://github.com/ark120202/vdf-extra.git",
   "author": "ark120202",
   "license": "MIT",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "ava"
   },
@@ -25,7 +25,6 @@
     "dedent": "^0.7.0"
   },
   "files": [
-    "index.js",
-    "index.d.ts"
+    "lib"
   ]
 }

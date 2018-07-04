@@ -1,3 +1,5 @@
+export const EXTRA_VALUES: unique symbol;
+
 export interface ParseOptions {
   mergeRoots?: boolean;
   parseUnquotedStrings?: boolean;
