@@ -1,5 +1,19 @@
 export const EXTRA_VALUES: unique symbol;
 
+/**
+ * Sets multiple values to a key in an object.
+ * The last value of an array would be used as as primary value.
+ * The rest would be added under EXTRA_VALUES symbol.
+ */
+export function set<O, K extends keyof O>(o: O, key: K, values: O[K][]): void;
+
+/**
+ * Returns an array of key/values of the enumerable properties of an object.
+ * Supports extra values under EXTRA_VALUES symbol.
+ */
+export function entries<T>(o: { [s: string]: T } | ArrayLike<T>): [string, T][];
+export function entries<T>(o: {}): [string, any][];
+
 export interface ParseOptions {
   /** If false, returns object with KV file root element */
   mergeRoots?: boolean;
@@ -29,7 +43,10 @@ export function parse<T extends object>(string: string, options?: ParseOptions):
  * @param string Input string
  * @param options Parsing options
  */
-export function parseAsync<T extends object>(string: string, options?: AsyncParseOptions): Promise<T>;
+export function parseAsync<T extends object>(
+  string: string,
+  options?: AsyncParseOptions,
+): Promise<T>;
 
 export interface StringifyOptions {
   /** Length of alignment. Must be dividable by tabSize if used. Defaults to -1, which means 2 spaces */
@@ -46,7 +63,4 @@ export interface StringifyOptions {
  * @param obj Converted object
  * @param options Options
  */
-export function stringify(
-  obj: object,
-  options?: StringifyOptions,
-): string;
+export function stringify(obj: object, options?: StringifyOptions): string;
