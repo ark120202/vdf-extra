@@ -1,9 +1,13 @@
 export const EXTRA_VALUES: unique symbol;
 
 export interface ParseOptions {
+  /** If false, returns object with KV file root element */
   mergeRoots?: boolean;
+  /** If true, parser wil handle unquoted tokens */
   parseUnquotedStrings?: boolean;
+  /** If not false, number-like strings would be parsed as numbers */
   parseNumbers?: boolean;
+  /** Function that will be called to each #base element */
   getBaseFile(path: string): string;
 }
 
@@ -12,45 +16,35 @@ export interface AsyncParseOptions extends ParseOptions {
 }
 
 /**
- * Parses Key Values string into JS object
+ * Converts a VDF string into an object.
  *
  * @param string Input string
  * @param options Parsing options
- * @param options.mergeRoots If false, returns object with KV file root element
- * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
- * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
- * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
  */
 export function parse<T extends object>(string: string, options?: ParseOptions): T;
 
 /**
- * Parses Key Values string into JS object
+ * Converts a VDF string into an object.
  *
  * @param string Input string
  * @param options Parsing options
- * @param options.getBaseFile Function that will be called to each #base element
- * @param options.mergeRoots If false, returns object with KV file root element
- * @param options.parseUnquotedStrings If true, parser wil handle unquoted tokens
- * @param options.parseNumbers If not false, number-like strings would be parsed as numbers
- * @return Converted object. Can be a promise if KV file has #base properties, so use this function with Promise.resolve
  */
 export function parseAsync<T extends object>(string: string, options?: AsyncParseOptions): Promise<T>;
 
 export interface StringifyOptions {
+  /** Length of alignment. Must be dividable by tabSize if used. Defaults to -1, which means 2 spaces */
   align?: number;
+  /** String that will be used as indent. Defaults to '\t'. */
   space?: string | number;
+  /** Size of \t character, used for align. Defaults to 4. */
   tabSize?: number;
 }
 
 /**
- * Converts JS object into Key Values file
+ * Converts a JavaScript object to a VDF string
  *
- * @param {object} obj Converted object
- * @param {?object} options Options
- * @param {?number} options.align Length of alignment. Must be dividable by tabSize if used. Defaults to -1, which means 2 spaces
- * @param {?string} options.space String that will be used as indent. Defaults to '\t'.
- * @param {?number} options.tabSize Default tab size. Will be used only if indent is tab. Defaults to 4.
- * @returns {string} Stringified Key Values file
+ * @param obj Converted object
+ * @param options Options
  */
 export function stringify(
   obj: object,
