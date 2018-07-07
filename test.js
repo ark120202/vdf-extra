@@ -143,6 +143,15 @@ test(
   `.replace(/  /g, '\t'),
 );
 test(
+  'stringifies extra values without main key',
+  stringifies,
+  { [EXTRA_VALUES]: { _: [1, 2] } },
+  dedent`
+    "_"    "1"
+    "_"    "2"
+  `.replace(/  /g, '\t'),
+);
+test(
   'stringifies minified',
   stringifies,
   { root: { _: 'value' } },

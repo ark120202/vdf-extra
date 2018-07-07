@@ -16,8 +16,7 @@
     "test": "ava"
   },
   "dependencies": {
-    "lodash.flatmap": "^4.5.0",
-    "lodash.merge": "^4.6.0"
+    "lodash": "^4.17.10"
   },
   "devDependencies": {
     "ava": "^0.25.0",
