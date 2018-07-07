@@ -25,9 +25,9 @@ export interface ParseOptions {
   getBaseFile(path: string): string;
 }
 
-export interface AsyncParseOptions extends ParseOptions {
-  getBaseFile(path: string): string | Promise<string>;
-}
+export type AsyncParseOptions =
+  | ParseOptions
+  | { getBaseFile(path: string): string | Promise<string> };
 
 /**
  * Converts a VDF string into an object.
