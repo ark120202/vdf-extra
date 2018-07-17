@@ -22,12 +22,12 @@ export interface ParseOptions {
   /** If not false, number-like strings would be parsed as numbers */
   parseNumbers?: boolean;
   /** Function that will be called to each #base element */
-  getBaseFile(path: string): string;
+  getBaseFile?(path: string): string;
 }
 
 export type AsyncParseOptions =
   | ParseOptions
-  | { getBaseFile(path: string): string | Promise<string> };
+  | { getBaseFile?(path: string): string | Promise<string> };
 
 /**
  * Converts a VDF string into an object.
