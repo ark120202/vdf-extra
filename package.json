@@ -1,6 +1,6 @@
 {
   "name": "vdf-extra",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Parser and serializer for Valve's VDF format",
   "keywords": [
     "steam",
