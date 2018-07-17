@@ -35,7 +35,10 @@ export type AsyncParseOptions =
  * @param string Input string
  * @param options Parsing options
  */
-export function parse<T extends object>(string: string, options?: ParseOptions): T;
+export function parse<T extends object>(
+  text: string,
+  options?: ParseOptions,
+): T;
 
 /**
  * Converts a VDF string into an object.
