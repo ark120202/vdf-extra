@@ -170,3 +170,10 @@ test(
   `,
   { space: '  ' },
 );
+test(
+  'not stringifies null or undefined values',
+  stringifies,
+  { root: { 1: null, 2: undefined } },
+  '"root" {  }',
+  { space: 0 },
+);
