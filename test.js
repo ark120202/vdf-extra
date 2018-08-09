@@ -130,6 +130,15 @@ test(
   `.replace(/  /g, '\t'),
 );
 test(
+  'stringifies booleans',
+  stringifies,
+  { true: true, false: false },
+  dedent`
+    "true"    "1"
+    "false"    "0"
+  `.replace(/  /g, '\t'),
+);
+test(
   'stringifies extra values',
   stringifies,
   { _: 3, [EXTRA_VALUES]: { _: [1, {}] } },
